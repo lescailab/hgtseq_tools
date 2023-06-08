@@ -1,6 +1,16 @@
 library(tidyverse)
 library(furrr)
 
+##################################
+### code used to extract nodes ###
+##################################
+
+splitLines<-do.call(rbind,lapply(strsplit(readLines(nodeFile),'\\s*\\|\\s*'),'[',1:3))
+colnames(splitLines)<-c('id','parent','rank')
+splitLines<-data.frame('id'=as.integer(splitLines[,'id']),'rank'=splitLines[,'rank'],'parent'=as.numeric(splitLines[,'parent']),stringsAsFactors=FALSE)
+
+##################################
+
 dataset = readRDS("/home/lescailab/COLLABS/malacrida/glossina_hgtseq_run02/classified_reads_collated_single.rds")
 small_dataset = head(dataset, 20)
 
