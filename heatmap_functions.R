@@ -1,10 +1,13 @@
 library(tidyverse)
 library(furrr)
 
+### how to run this code ###
+# Rscript heatmap_functions /path/to/classified_reads.rds #
+
 nodes_rds_object = readRDS("/home/lescailab/local_REFS/taxonomy_sql/nodes_parsed.rds")
 
-dataset = readRDS("/home/lescailab/COLLABS/malacrida/glossina_hgtseq_run02/classified_reads_collated_single.rds")
-small_dataset = head(dataset, 40)
+args = commandArgs(trailingOnly = TRUE)
+small_dataset = readRDS(args[1])
 
 #####################
 ### tree function ###
