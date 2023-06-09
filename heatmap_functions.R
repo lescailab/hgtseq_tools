@@ -1,77 +1,44 @@
 library(tidyverse)
 library(furrr)
 
-##################################
-### code used to extract nodes ###
-##################################
-
-splitLines<-do.call(rbind,lapply(strsplit(readLines(nodeFile),'\\s*\\|\\s*'),'[',1:3))
-colnames(splitLines)<-c('id','parent','rank')
-splitLines<-data.frame('id'=as.integer(splitLines[,'id']),'rank'=splitLines[,'rank'],'parent'=as.numeric(splitLines[,'parent']),stringsAsFactors=FALSE)
-
-##################################
-
-dataset = readRDS("/home/lescailab/COLLABS/malacrida/glossina_hgtseq_run02/classified_reads_collated_single.rds")
-small_dataset = head(dataset, 20)
-
-table1 = tibble(
-  "read name" = small_dataset$read_name,
-  "taxID" = small_dataset$taxID,
-  "k-mers info" = small_dataset$`k-mers info`
-)
-
-###########
-## ideal ##
-###########
-
 nodes_rds_object = readRDS("/home/lescailab/local_REFS/taxonomy_sql/nodes_parsed.rds")
 
-parseTaxAssignment <- function(kmersinfo, current_taxid, nodes=nodes_rds_object){
-  tax_tree = calcTree(current_taxid, nodes)
-  tax_score = evalKrakenQual(kmersinfo, tax_tree)
-  tax_heatmap = heatmapList(kmersinfo, tax_tree)
-  results = list(tax_tree, tax_score, tax_heatmap)
-  return(results)
-}
-
-heatmap_data = table1 %>% 
-  mutate(
-    heatmap_var = map2(`k-mers info`, `taxID`, parseTaxAssignment)
-  ) 
-
-heatmap_table = heatmap_data %>% 
-  select(heatmap_var) %>% 
-  unnest_wider(heatmap_var, names_sep = "_") %>% 
-  as.matrix()
-
-hmap = as.matrix(heatmap_table[,3])
-row.names(hmap) <- heatmap_data$`read name`
-
-x1 = lapply(hmap, "length<-", max(lengths(hmap)))
-names(x1) = heatmap_data$`read name`
-
-final_matrix = t(bind_rows(x1, .id = NULL ))
-class(final_matrix) <- "numeric"
-heatmap(final_matrix, Colv = NA, Rowv = NA, scale = "column")
+dataset = readRDS("/home/lescailab/COLLABS/malacrida/glossina_hgtseq_run02/classified_reads_collated_single.rds")
+small_dataset = head(dataset, 40)
 
 #####################
 ### tree function ###
 #####################
 
 calcTree <- function(current_taxid, nodes){
-  tree = c(as.character(current_taxid))
-  parent = 0
-  while (length(parent)>0 & parent!=1){
-    parent = nodes %>% 
-      filter(id == current_taxid) %>% 
-      pull(parent)
-    if(length(parent)>0 & parent != 1){
-      tree = c(tree, as.character(parent))
-      current_taxid = parent
+  tree <- tryCatch(
+    {
+      tree = c(as.character(current_taxid))
+      parent = 0
+      while (length(parent)>0 & parent!=1){
+        parent = nodes %>% 
+          filter(id == current_taxid) %>% 
+          pull(parent)
+        if(length(parent)>0 & parent != 1){
+          tree = c(tree, as.character(parent))
+          current_taxid = parent
+        }
+      }
+      return(tree)
+    },
+    error = function(cond){
+      empty_tree = c(NA)
+      message("-----------------------------------")
+      message(paste0("error: tax id ", current_taxid, " is not present in nodes, so the function returns an empy tree."))
+      return(empty_tree)
     }
-  }
+  )
   return(tree)
 }
+
+
+writeLines(" ")
+writeLines("--- tree function saved ---")
 
 ######################
 ### score function ###
@@ -106,6 +73,8 @@ evalKrakenQual <- function(kmersinfo, tree){
   return(taxid_score)
 }
 
+writeLines("--- score function saved ---")
+
 ######################
 ## heatmap function ##
 ######################
@@ -133,28 +102,81 @@ heatmapList <- function(kmersinfo, tree){
   return(lista)
 }
 
-#############################################################################
-# multicore with furrr - tested as script (rstudio does not like multicore) #
-#############################################################################
-save.image("tests_mapping.RData")
+writeLines("--- heatmap function saved ---")
+writeLines(" ")
 
-performance_tests = tibble(
-  lines = c(rep(2000,5), rep(5000,5), rep(2000,5), rep(5000,5)),
-  cores = rep(c(2,4,8,16,32),4),
-  method = c(rep("tidyverse", 10), rep("furrr", 10)),
-  runtime =c(
-    c(2.768, 2.749, 2.77, 2.797, 2.738), ## tidyverse with 2000 lines
-    c(6.22, 6.242, 6.28, 6.24, 6.201), ## tidyverse with 5000 lines
-    c(2.209, 1.657, 1.332, 1.267, 1.435), ## furrr with 2000 lines
-    c(5.223, 4.246, 3.391, 3.047, 3.06) ## furrr with 5000 lines
-  )
-)
+#####################
+## global function ##
+#####################
 
-ggplot(performance_tests, 
-       aes(x=cores, y=runtime, colour = method))+
-  geom_point()+
-  geom_smooth(method = "loess")+
-  geom_vline(xintercept = 8, colour = "blue")+
-  facet_wrap(lines~., scales = "free")
+parseTaxAssignment <- function(kmersinfo, current_taxid, nodes=nodes_rds_object){
+  message(paste0("analysing tax id ", current_taxid))
+  tax_tree = calcTree(current_taxid, nodes)
+  tax_score = evalKrakenQual(kmersinfo, tax_tree)
+  tax_heatmap = heatmapList(kmersinfo, tax_tree)
+  results = list(tax_tree, tax_score, tax_heatmap)
+  return(results)
+}
+
+writeLines("--- global function saved ---")
+
+##########################
+## run with future_map2 ##
+##########################
+
+# plan(multicore, workers = 2)
+# heatmap_data = table1 %>% 
+#   mutate(
+#     heatmap_var = future_map2(`k-mers info`, `taxID`, parseTaxAssignment)
+#   ) 
+
+###################
+## run with map2 ##
+###################
+
+writeLines(" ")
+writeLines("-------------------------------")
+writeLines("--- running global function ---")
+writeLines("-------------------------------")
+writeLines(" ")
+
+heatmap_data = small_dataset %>% 
+  mutate(
+    heatmap_var = map2(`k-mers info`, `taxID`, parseTaxAssignment)
+  ) 
+
+writeLines(" ")
+writeLines("------------------------------------------")
+writeLines("--- global function executed correctly ---")
+writeLines("------------------------------------------")
+writeLines(" ")
+
+######################
+## heatmap assembly ##
+######################
+
+heatmap_table = heatmap_data %>% 
+  select(heatmap_var) %>% 
+  unnest_wider(heatmap_var, names_sep = "_") %>% 
+  as.matrix()
+
+heatmap_list = as.matrix(heatmap_table[,3])
+row.names(heatmap_list) <- heatmap_data$`read_name`
+
+matrix_fill = lapply(heatmap_list, "length<-", max(lengths(heatmap_list)))
+names(matrix_fill) = heatmap_data$`read_name`
+
+heatmap_matrix = t(bind_rows(matrix_fill, .id = NULL ))
+class(heatmap_matrix) <- "numeric"
+
+saveRDS(heatmap_matrix, file = "heatmap_matrix.rds")
+
+pdf("heatmap.pdf")
+heatmap(heatmap_matrix, Colv = NA, Rowv = NA, scale = "column")
+dev.off()
 
 
+writeLines(" ")
+writeLines("-----------------------------------")
+writeLines("--- heatmap generated correctly ---")
+writeLines("-----------------------------------")
