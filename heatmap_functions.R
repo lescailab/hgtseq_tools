@@ -7,7 +7,7 @@ library(furrr)
 nodes_rds_object = readRDS("/home/lescailab/local_REFS/taxonomy_sql/nodes_parsed.rds")
 
 args = commandArgs(trailingOnly = TRUE)
-small_dataset = readRDS(args[1])
+dataset = readRDS(args[1])
 
 #####################
 ### tree function ###
@@ -128,7 +128,7 @@ writeLines("--- global function saved ---")
 ##########################
 
 # plan(multicore, workers = 2)
-# heatmap_data = table1 %>% 
+# heatmap_data = dataset %>% 
 #   mutate(
 #     heatmap_var = future_map2(`k-mers info`, `taxID`, parseTaxAssignment)
 #   ) 
@@ -143,7 +143,7 @@ writeLines("--- running global function ---")
 writeLines("-------------------------------")
 writeLines(" ")
 
-heatmap_data = small_dataset %>% 
+heatmap_data = dataset %>% 
   mutate(
     heatmap_var = map2(`k-mers info`, `taxID`, parseTaxAssignment)
   ) 
