@@ -9,7 +9,12 @@ nodes_rds_object = readRDS("/home/lescailab/local_REFS/taxonomy_sql/nodes_parsed
 args            = commandArgs(trailingOnly = TRUE)
 dataset         = readRDS(args[1])
 parallel_choice = args[2]
-cores           = args[3]
+cores           = as.numeric(args[3])
+
+writeLines("#### R execution - summary of arguments ###########")
+writeLines(paste0("## dataset to import = ", args[1]))
+writeLines(paste0("## parallel choice = ", parallel_choice))
+writeLines(paste0("## number of cores = ", cores))
 
 #####################
 ### tree function ###
