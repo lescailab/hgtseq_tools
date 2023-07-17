@@ -11,6 +11,8 @@ dataset         = readRDS(args[1])
 parallel_choice = args[2]
 cores           = as.numeric(args[3])
 
+output_data     = paste0(gsub(".rds","", args[1]), "_scored.rds")
+
 writeLines("#### R execution - summary of arguments ###########")
 writeLines(paste0("## dataset to import = ", args[1]))
 writeLines(paste0("## parallel choice = ", parallel_choice))
@@ -48,7 +50,7 @@ calcTree <- function(current_taxid, nodes){
 
 
 writeLines(" ")
-writeLines("--- tree function saved ---")
+writeLines("--- tree function created ---")
 
 ######################
 ### score function ###
@@ -83,7 +85,7 @@ evalKrakenQual <- function(kmersinfo, tree){
   return(taxid_score)
 }
 
-writeLines("--- score function saved ---")
+writeLines("--- score function created ---")
 
 ######################
 ## heatmap function ##
@@ -112,7 +114,7 @@ heatmapList <- function(kmersinfo, tree){
   return(lista)
 }
 
-writeLines("--- heatmap function saved ---")
+writeLines("--- heatmap function created ---")
 writeLines(" ")
 
 #####################
@@ -128,7 +130,7 @@ parseTaxAssignment <- function(kmersinfo, current_taxid, nodes=nodes_rds_object)
   return(results)
 }
 
-writeLines("--- global function saved ---")
+writeLines("--- global function created ---")
 
 if (parallel_choice == "parallel"){
 
@@ -181,9 +183,15 @@ if (parallel_choice == "parallel"){
 
 }
 
+writeLines("----- saving parsed score and heatmap data ----------")
+saveRDS(heatmap_data, file = output_data)
+writeLines("----- parsed score and heatmap data saved ----------")
+
 ######################
 ## heatmap assembly ##
 ######################
+
+writeLines("----- unnesting and saving heatmap  ----------")
 
 heatmap_table = heatmap_data %>% 
   select(heatmap_var) %>% 
