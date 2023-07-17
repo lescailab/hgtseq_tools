@@ -2,12 +2,14 @@ library(tidyverse)
 library(furrr)
 
 ### how to run this code ###
-# Rscript heatmap_functions /path/to/classified_reads.rds #
+# Rscript calculate_heaptmap.R /path/to/classified_reads.rds ifparallel numbercores #
 
 nodes_rds_object = readRDS("/home/lescailab/local_REFS/taxonomy_sql/nodes_parsed.rds")
 
-args = commandArgs(trailingOnly = TRUE)
-dataset = readRDS(args[1])
+args            = commandArgs(trailingOnly = TRUE)
+dataset         = readRDS(args[1])
+parallel_choice = args[2]
+cores           = args[3]
 
 #####################
 ### tree function ###
@@ -123,36 +125,56 @@ parseTaxAssignment <- function(kmersinfo, current_taxid, nodes=nodes_rds_object)
 
 writeLines("--- global function saved ---")
 
+if (parallel_choice == "parallel"){
+
+
 ##########################
 ## run with future_map2 ##
 ##########################
 
-# plan(multicore, workers = 2)
-# heatmap_data = dataset %>% 
-#   mutate(
-#     heatmap_var = future_map2(`k-mers info`, `taxID`, parseTaxAssignment)
-#   ) 
+    writeLines(" ")
+    writeLines("-------------------------------")
+    writeLines("--- running global function ---")
+    writeLines("-------------------------------")
+    writeLines(" ")
 
-###################
-## run with map2 ##
-###################
+    plan(multicore, workers = cores)
+    heatmap_data = dataset %>% 
+      mutate(
+        heatmap_var = future_map2(`k-mers info`, `taxID`, parseTaxAssignment)
+      ) 
 
-writeLines(" ")
-writeLines("-------------------------------")
-writeLines("--- running global function ---")
-writeLines("-------------------------------")
-writeLines(" ")
+    writeLines(" ")
+    writeLines("------------------------------------------")
+    writeLines("--- global function executed correctly ---")
+    writeLines("------------------------------------------")
+    writeLines(" ")
 
-heatmap_data = dataset %>% 
-  mutate(
-    heatmap_var = map2(`k-mers info`, `taxID`, parseTaxAssignment)
-  ) 
+} else {
 
-writeLines(" ")
-writeLines("------------------------------------------")
-writeLines("--- global function executed correctly ---")
-writeLines("------------------------------------------")
-writeLines(" ")
+    ###################
+    ## run with map2 ##
+    ###################
+
+    writeLines(" ")
+    writeLines("-------------------------------")
+    writeLines("--- running global function ---")
+    writeLines("-------------------------------")
+    writeLines(" ")
+
+    heatmap_data = dataset %>% 
+      mutate(
+        heatmap_var = map2(`k-mers info`, `taxID`, parseTaxAssignment)
+      ) 
+
+    writeLines(" ")
+    writeLines("------------------------------------------")
+    writeLines("--- global function executed correctly ---")
+    writeLines("------------------------------------------")
+    writeLines(" ")
+
+
+}
 
 ######################
 ## heatmap assembly ##
@@ -174,9 +196,9 @@ class(heatmap_matrix) <- "numeric"
 
 saveRDS(heatmap_matrix, file = "heatmap_matrix.rds")
 
-pdf("heatmap.pdf")
-heatmap(heatmap_matrix, Colv = NA, Rowv = NA, scale = "column")
-dev.off()
+# pdf("heatmap.pdf")
+# heatmap(heatmap_matrix, Colv = NA, Rowv = NA, scale = "column")
+# dev.off()
 
 
 writeLines(" ")
