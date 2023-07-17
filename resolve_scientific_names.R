@@ -9,7 +9,7 @@ library(taxonomizr)
 library(tidyverse)
 
 writeLines("######## R execution - arguments summary ######")
-writeLines(paste0("## dataset to be parsed = ", dataset))
+writeLines(paste0("## dataset to be parsed = ", input_data))
 
 writeLines("## link local SQL database")
 sqldb = "/home/lescailab/local_REFS/taxonomy_sql/accessionTaxa.sql"
