@@ -1,5 +1,5 @@
 #!/bin/sh
-#SBATCH -c 32
+#SBATCH -c 16
 #SBATCH --mem 100G
 #SBATCH -t 2-00:00:00
 #SBATCH --job-name hgtseq_quality
