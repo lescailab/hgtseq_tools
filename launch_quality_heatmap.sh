@@ -12,8 +12,8 @@ parallel=$3
 echo "############ job summary ##################"
 echo "## working directory = $directory"
 echo "## data file = $datafile"
-echo "parallel execution choice = $parallel"
-echo "number of cores = $SLURM_CPUS_PER_TASK"
+echo "## parallel execution choice = $parallel"
+echo "## number of cores = $SLURM_CPUS_PER_TASK"
 echo "########### end job summary ###############"
 
 

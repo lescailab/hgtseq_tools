@@ -17,6 +17,7 @@ writeLines("#### R execution - summary of arguments ###########")
 writeLines(paste0("## dataset to import = ", args[1]))
 writeLines(paste0("## parallel choice = ", parallel_choice))
 writeLines(paste0("## number of cores = ", cores))
+writeLines(paste0("## output with resolved score = ", output_data))
 
 #####################
 ### tree function ###
