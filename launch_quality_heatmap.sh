@@ -17,4 +17,4 @@ conda activate r-taxonomy-tools
 cd $directory
 
 echo "#### launching R calculation ########"
-Rscript /home/lescailab/CODE/hgtseq_tools/calculate_heaptmap.R $datafile $parallel $SLURM_CPUS_PER_TASK
+Rscript /home/lescailab/CODE/hgtseq_tools/calculate_heatmap.R $datafile $parallel $SLURM_CPUS_PER_TASK
