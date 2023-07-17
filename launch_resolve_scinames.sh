@@ -5,12 +5,15 @@
 #SBATCH --job-name resolve
 #SBATCH -p ulow
 
+directory=$1
+datafile=$2
+
 echo "#### sourcing bashrc"
 source ~/.bashrc
 echo "#### activating conda env"
 conda activate r-taxonomy-tools
 
-cd /home/lescailab/COLLABS/malacrida/glossina_hgtseq_run02
+cd $directory
 
 echo "#### launching R calculation ########"
-Rscript resolve_scientific_names.R
+Rscript /home/lescailab/CODE/hgtseq_tools/resolve_scientific_names.R $datafile

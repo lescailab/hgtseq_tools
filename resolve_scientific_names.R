@@ -1,11 +1,20 @@
 #!/usr/bin/env Rscript
 
+args            = commandArgs(trailingOnly = TRUE)
+input_data      = args[1]
+output_data     = paste0(gsub(".rds","", input_data), "_resolved.rds")
+
 writeLines("--- loading library")
 library(taxonomizr)
 library(tidyverse)
 
+writeLines("######## R execution - arguments summary ######")
+writeLines(paste0("## dataset to be parsed = ", dataset))
+
+writeLines("## link local SQL database")
 sqldb = "/home/lescailab/local_REFS/taxonomy_sql/accessionTaxa.sql"
 
+writeLines("## setup parsing functions")
 getGenusFromSpecies <- function(taxaid){
   taxonomy = getTaxonomy(taxaid, sqldb)
   genus = as_tibble(taxonomy)$genus[[1]]
@@ -48,24 +57,16 @@ getLowestRankName <- function(taxaid, result="name"){
 }
 
 writeLines("--- reading the data")
-collated_single = readRDS("/home/lescailab/COLLABS/malacrida/glossina_hgtseq_run02/classified_reads_collated_single.rds")
-collated_both = readRDS("/home/lescailab/COLLABS/malacrida/glossina_hgtseq_run02/classified_reads_collated_both.rds")
+collated_reads = readRDS(input_data)
 
-writeLines("--- resolving single reads")
-collated_single_resolved = tibble(
-  taxID = unique(collated_single$taxID),
-  sciname = unlist(lapply(unique(collated_single$taxID), getLowestRankName)),
-  rank = unlist(lapply(unique(collated_single$taxID), getLowestRankName, "rank")),
-  genus = unlist(lapply(unique(collated_single$taxID), getGenusFromSpecies))
+writeLines("--- resolving reads")
+collated_reads_resolved = tibble(
+  taxID = unique(collated_reads$taxID),
+  sciname = unlist(lapply(unique(collated_reads$taxID), getLowestRankName)),
+  rank = unlist(lapply(unique(collated_reads$taxID), getLowestRankName, "rank")),
+  genus = unlist(lapply(unique(collated_reads$taxID), getGenusFromSpecies))
 )
 
-writeLines("--- resolving both reads")
-collated_both_resolved = tibble(
-  taxID = unique(collated_both$taxID),
-  sciname = unlist(lapply(unique(collated_both$taxID), getLowestRankName)),
-  rank = unlist(lapply(unique(collated_both$taxID), getLowestRankName, "rank")),
-  genus = unlist(lapply(unique(collated_both$taxID), getGenusFromSpecies))
-)
 
 
 #####################################################
@@ -73,16 +74,10 @@ collated_both_resolved = tibble(
 #####################################################
 
 
-writeLines("--- joining resolved and original data for single")
-collated_single = collated_single %>%
-  left_join(collated_single_resolved, by = "taxID")
+writeLines("--- joining resolved and original data")
+collated_reads = collated_reads %>%
+  left_join(collated_reads_resolved, by = "taxID")
 writeLines("--- saving results")
-saveRDS(collated_single, file = "collated_single_resolved.rds")
-
-writeLines("--- joining resolved and original data for both")
-collated_both = collated_both %>%
-  left_join(collated_both_resolved, by = "taxID")
-writeLines("--- saving results")
-saveRDS(collated_both, file = "collated_both_resolved.rds")
+saveRDS(collated_reads, file = output_data)
 
 writeLines("--- JOB COMPLETED")
