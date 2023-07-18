@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH -c 1
 #SBATCH --mem 100G
-#SBATCH -t 1-00:00:00
+#SBATCH -t 2-00:00:00
 #SBATCH --job-name resolve
 #SBATCH -p ulow
 

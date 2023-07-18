@@ -1,9 +1,9 @@
 #!/bin/sh
 #SBATCH -c 16
-#SBATCH --mem 100G
-#SBATCH -t 2-00:00:00
+#SBATCH --mem 600G
+#SBATCH -t 3-00:00:00
 #SBATCH --job-name hgtseq_quality
-#SBATCH -p ulow
+#SBATCH -p low-fn
 
 directory=$1
 datafile=$2

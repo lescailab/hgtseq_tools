@@ -10,6 +10,7 @@ library(tidyverse)
 
 writeLines("######## R execution - arguments summary ######")
 writeLines(paste0("## dataset to be parsed = ", input_data))
+writeLines(paste0("## dataset to be written = ", output_data))
 
 writeLines("## link local SQL database")
 sqldb = "/home/lescailab/local_REFS/taxonomy_sql/accessionTaxa.sql"
