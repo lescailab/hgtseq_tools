@@ -41,8 +41,10 @@ calcTree <- function(current_taxid, nodes){
     },
     error = function(cond){
       empty_tree = c(NA)
-      message("-----------------------------------")
-      message(paste0("error: tax id ", current_taxid, " is not present in nodes, so the function returns an empy tree."))
+      ## removed message because it makes the log quite heavy on disk
+      ## when many reads are unclassified
+      ## message("-----------------------------------")
+      ## message(paste0("error: tax id ", current_taxid, " is not present in nodes, so the function returns an empy tree."))
       return(empty_tree)
     }
   )
@@ -132,6 +134,10 @@ parseTaxAssignment <- function(kmersinfo, current_taxid, nodes=nodes_rds_object)
 }
 
 writeLines("--- global function created ---")
+
+
+### RUN IS CONDITIONAL TO PARALLELISATION OR NOT
+### MEMORY REQUIRED FOR MILLIONS OF RECORDS CAN BE HIGH
 
 if (parallel_choice == "parallel"){
 
